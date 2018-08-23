@@ -45,8 +45,8 @@ class MobileSpiderSpider(scrapy.Spider):
 
     def start_requests(self):
         city_list = ["北京", "上海", "深圳", "广州", "杭州", "南京", "武汉", "成都"]
-        city_list = ['上海']
-        position_list = ["python", "java"]
+        city_list = ['北京']
+        position_list = ["python"]
         # "爬虫", "前端", "java", "php", "c", "c++",
         #                  "数据挖掘", "数据分析", "机器学习", "自然语言处理"]
         for city in city_list:
@@ -88,7 +88,8 @@ class MobileSpiderSpider(scrapy.Spider):
             city=json_data['content']['data']['custom']['city']
         )
         total_page = math.ceil(int(base_info['totalCount'])/15)
-        if base_info['pageNo'] <= total_page:
+
+        if base_info['pageNo'] < total_page:
             # print(response.request.headers['Cookie'])
             next_num = base_info['pageNo'] + 1
             headers = self.headers
@@ -98,7 +99,7 @@ class MobileSpiderSpider(scrapy.Spider):
                 pageNo=str(next_num),
                 pageSize="15"
             )
-            print("一共有{}页，正在获取第{}页".format(total_page, base_info['pageNo']+1))
+            print("一共有{}页，正在获取第{}页".format(total_page, next_num))
             yield scrapy.FormRequest(self.search_url, method="GET", headers=headers,
                                      formdata=form_data, callback=self.parse)
             time.sleep(random.uniform(1, 3))

@@ -6,4 +6,4 @@ from scrapy.cmdline import execute
 execute("scrapy crawl mobile_spider".split())
 
 
-execute("scrapy ")
+# execute("scrapy ")
