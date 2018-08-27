@@ -4,6 +4,7 @@ import json
 import time
 import math
 import random
+import datetime
 from urllib.parse import urljoin
 from ..items import LagouWebsiteItem
 
@@ -26,10 +27,14 @@ class MobileSpiderSpider(scrapy.Spider):
     search_url = "https://m.lagou.com/search.json"
     base_url = "https://www.lagou.com/"
     detail_url = "https://m.lagou.com/jobs/{}.html"
+    gongsi_url = "https://www.lagou.com/gongsi/{}.html"
 
     custom_settings = {
         "ITEM_PIPELINES": {
            'lagou_website.pipelines.LagouWebsitePipeline': 300,
+        },
+        "DOWNLOADER_MIDDLEWARES": {
+            # 'lagou_website.middlewares.ProxyMiddleWare': 125,
         },
         "DEFAULT_REQUEST_HEADERS": {
            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1",
@@ -45,10 +50,11 @@ class MobileSpiderSpider(scrapy.Spider):
 
     def start_requests(self):
         city_list = ["北京", "上海", "深圳", "广州", "杭州", "南京", "武汉", "成都"]
-        city_list = ['北京']
-        position_list = ["python"]
-        # "爬虫", "前端", "java", "php", "c", "c++",
-        #                  "数据挖掘", "数据分析", "机器学习", "自然语言处理"]
+        city_list = ['上海']
+        position_list = [""]
+        # "python", "java", "数据分析", "爬虫", "前端",
+        # "php", "c", "c++", "数据挖掘", "机器学习", "自然语言处理"
+
         for city in city_list:
             for job in position_list:
                 formdata = dict(
@@ -65,6 +71,9 @@ class MobileSpiderSpider(scrapy.Spider):
     def parse(self, response):
         json_data = json.loads(response.text)
         print(json_data)
+        job_data = json_data['content']['data']['page']['result']
+        if len(job_data) is 0:
+            return None
         job_detail_code_list = json_data['content']['data']['page']['result']
         for _ in job_detail_code_list:
             meta_data = dict(
@@ -74,10 +83,12 @@ class MobileSpiderSpider(scrapy.Spider):
                 company_id=_['companyId'],
                 release_time=_['createTime'],
                 salary=_['salary'],
+                company_url=self.gongsi_url.format(_['companyId']),
                 company_name=_['companyName'],
                 company_full_name=_['companyFullName'],
-                company_logo=urljoin(self.base_url, _.get('companyLogo'))
-            )
+                company_logo=urljoin(self.base_url, _.get('companyLogo')),
+                # proxy="http://118.190.95.43:9001",
+                )
             yield scrapy.Request(url=self.detail_url.format(_['positionId']), method="GET", headers=self.headers,
                                  meta=meta_data, callback=self.second_parse)
 
@@ -107,6 +118,8 @@ class MobileSpiderSpider(scrapy.Spider):
     def second_parse(self, response):
         item = LagouWebsiteItem()
         item['_id'] = response.url.replace("/m.", "/www.")
+        item['position_url'] = item['_id']
+        item['company_url'] = response.meta['company_url']
         item['website_name'] = "拉勾网"
         item['company_id'] = response.meta['company_id']
         item['position_id'] = response.meta['position_id']
@@ -123,12 +136,15 @@ class MobileSpiderSpider(scrapy.Spider):
         item['company_full_name'] = response.meta['company_full_name']
 
         company_info_list = response.xpath(".//*[@class='info']/text()").extract_first().split('/')
-        item['company_type'] = company_info_list[0].strip()
+        item['company_type'] = company_info_list[0].strip().split(',')
         item['financing'] = company_info_list[1].strip()
         item['company_size'] = company_info_list[2].strip()
 
         description = "\n".join(response.xpath(".//*[@class='content']/p/text()").extract())
         item['description'] = description
-        if not description:
+        if not item['description'].strip():
             item['description'] = "\n".join(response.xpath(".//*[@class='content']/text()").extract())
+        elif not item['description'].strip():
+            item['description'] = "\n".join(response.xpath(".//*[@class='content']/span/text()").extract())
+        item['update_time'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         yield item

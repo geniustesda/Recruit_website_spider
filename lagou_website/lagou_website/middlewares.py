@@ -6,6 +6,7 @@
 # http://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
+import random
 
 
 class LagouWebsiteSpiderMiddleware(object):
@@ -54,3 +55,31 @@ class LagouWebsiteSpiderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
+
+
+PROXIES = ['http://118.190.95.43:9001']
+
+
+class ProxyMiddleWare(object):
+    def process_request(self, request, spider):
+        '''对request对象加上proxy'''
+        proxy = self.get_random_proxy()
+        print("this is request ip:"+proxy)
+        request.meta['proxy'] = 'http://118.190.95.43:9001'
+
+    def process_response(self, request, response, spider):
+        '''对返回的response处理'''
+        # 如果返回的response状态不是200，重新生成当前request对象
+        if response.status != 200:
+            proxy = self.get_random_proxy()
+            print("this is response ip:"+proxy)
+            # 对当前reque加上代理
+            request.meta['proxy'] = proxy
+            return request
+        return response
+
+    def get_random_proxy(self):
+        '''随机从文件中读取proxy'''
+        proxies = PROXIES
+        proxy = random.choice(proxies).strip()
+        return proxy

@@ -13,6 +13,8 @@ class LagouWebsiteItem(scrapy.Item):
     # name = scrapy.Field()
     company_id = scrapy.Field()
     position_id = scrapy.Field()
+    position_url = scrapy.Field()
+    company_url = scrapy.Field()
     position_name = scrapy.Field()
     position_type = scrapy.Field()
     release_time = scrapy.Field()
@@ -30,3 +32,4 @@ class LagouWebsiteItem(scrapy.Item):
     description = scrapy.Field()
     website_name = scrapy.Field()
     _id = scrapy.Field()
+    update_time = scrapy.Field()
