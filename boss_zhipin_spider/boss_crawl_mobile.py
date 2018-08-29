@@ -31,7 +31,8 @@ CITY_CODES = {
         "长沙": 101250100,
         "成都": 101270100
         }
-JOB_LIST = ["python", "爬虫", "前端", "机器学习", "数据挖掘", "人工智能", "php", "java"]
+JOB_LIST = ["python"]
+            # "python", "爬虫", "前端", "机器学习", "数据挖掘", "人工智能", "php", "java"
 Ready_todo = "ready_list.txt"
 Already_todo = "already_list.txt"
 CACHE_DIR = "cache"
