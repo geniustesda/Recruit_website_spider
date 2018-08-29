@@ -52,8 +52,10 @@ class MobileSpiderSpider(scrapy.Spider):
         city_list = ["北京", "上海", "深圳", "广州", "杭州", "南京", "武汉", "成都"]
         city_list = ['上海']
         position_list = [""]
-        # "python", "java", "数据分析", "爬虫", "前端",
+        # "python", "java", "数据分析", "爬虫", "前端", "嵌入式", "架构师", "分布式",
         # "php", "c", "c++", "数据挖掘", "机器学习", "自然语言处理"
+        # "设计", "视觉设计", "网页设计", "广告设计师"
+        # "运营", "用户运营", "产品运营", "内容运营"
 
         for city in city_list:
             for job in position_list:
@@ -64,7 +66,6 @@ class MobileSpiderSpider(scrapy.Spider):
                     pageSize="15"
                 )
                 print(formdata)
-                time.sleep(1)
                 yield scrapy.FormRequest(self.search_url, method="GET", formdata=formdata,
                                          callback=self.parse)
 
@@ -145,6 +146,6 @@ class MobileSpiderSpider(scrapy.Spider):
         if not item['description'].strip():
             item['description'] = "\n".join(response.xpath(".//*[@class='content']/text()").extract())
         elif not item['description'].strip():
-            item['description'] = "\n".join(response.xpath(".//*[@class='content']/span/text()").extract())
+            item['description'] = "\n".join(_.strip() for _ in response.xpath(".//*[@class='content']/span/text()").extract())
         item['update_time'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         yield item

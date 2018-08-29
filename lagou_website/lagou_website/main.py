@@ -24,7 +24,7 @@ def auto_run_crawl():
         data_backup()
         now_time2 = datetime.datetime.now()
         used_time = (now_time2 - now_time1).seconds
-        time.sleep(60*60*1-used_time)
+        time.sleep(60*60*0.5-used_time)
 
 
 if __name__ == '__main__':
